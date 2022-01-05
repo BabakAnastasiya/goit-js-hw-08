@@ -1,37 +1,38 @@
-import throttle from 'lodash.throttle';
-const STORAGE_KEY = 'feedback-form-state';
-const feedbackFormData = {};
+import throttle from 'lodash/throttle';
 
-const refs = {
+const ref = {
   form: document.querySelector('.feedback-form'),
-  input: document.querySelector('.feedback-form input'),
-  textarea: document.querySelector('.feedback-form textarea'),
 };
 
-refs.form.addEventListener('submit', onFormSubmit);
-refs.form.addEventListener('input', throttle(onFormInput, 500));
+const email = ref.form.elements.email;
+const message = ref.form.elements.message;
 
-populateOnFormInput();
+ref.form.addEventListener('input', throttle(onFormInput, 500));
+ref.form.addEventListener('submit', onFormSubmit);
 
 function onFormInput(e) {
-  feedbackFormData[e.target.name] = e.target.value;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(feedbackFormData));
+  const formData = {
+    email: email.value,
+    message: message.value,
+  };
+  localStorage.setItem('feedback-form-state', JSON.stringify(formData));
+}
+
+populateData();
+
+function populateData() {
+  const parsedData = JSON.parse(localStorage.getItem('feedback-form-state'));
+  if (!parsedData) return;
+  email.value = parsedData.email;
+  message.value = parsedData.message;
 }
 
 function onFormSubmit(e) {
   e.preventDefault();
-  e.currentTarget.reset();
-  localStorage.removeItem(STORAGE_KEY);
-  console.log(feedbackFormData);
-}
-
-function populateOnFormInput() {
-  const savedMessage = JSON.parse(localStorage.getItem(STORAGE_KEY));
-
-  if (savedMessage) {
-    refs.input.value = savedMessage.email || '';
-    refs.textarea.value = savedMessage.message || '';
-    feedbackFormData.email = refs.input.value;
-    feedbackFormData.message = refs.textarea.value;
+  if (!email.value || !message.value) {
+    return alert('All feels must be fell out!');
   }
+  console.log({ email: email.value, message: message.value });
+  e.currentTarget.reset();
+  localStorage.removeItem('feedback-form-state');
 }
